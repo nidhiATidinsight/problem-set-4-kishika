@@ -43,14 +43,113 @@ Please refer to the minilesson on code style
 
 ## Download and explore the Provider of Services (POS) file (10 pts)
 
-1. 
-2. 
-    a.
-    b.
-3. 
-4. 
-    a.
-    b.
+1. The variables I pulled are PRVDR_CTGRY_SBTYP_CD, PRVDR_CTGRY_CD, PRVDR_NUM, PGM_TRMNTN_CD, FAC_NAME and ZIP_CD
+2. Importing the dataset
+
+```{python}
+import pandas as pd
+import altair as alt
+```
+
+```{python}
+hospitals_2016 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2016.csv")
+hospitals_2016.head()
+
+# Subsetting the hospitals
+short_term_hospitals_2016 = hospitals_2016[(hospitals_2016["PRVDR_CTGRY_CD"] == 1) & (hospitals_2016["PRVDR_CTGRY_SBTYP_CD"] == 1)]
+
+# Adding a column for the year
+short_term_hospitals_2016["YEAR"] = 2016
+
+short_term_hospitals_2016.shape[0]
+```
+
+    a. The number of hospitals reported in this data are 7245. 
+    b. # ADD ANSWER HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+3. Importing the datasets
+```{python}
+# FOR 2017
+hospitals_2017 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2017.csv")
+hospitals_2017.head()
+
+# Subsetting the hospitals
+short_term_hospitals_2017 = hospitals_2017[(hospitals_2017["PRVDR_CTGRY_CD"] == 1) & (hospitals_2017["PRVDR_CTGRY_SBTYP_CD"] == 1)]
+
+# Adding a column for the year
+short_term_hospitals_2017["YEAR"] = 2017
+
+print(f"The short term hospitals in 2017 were {short_term_hospitals_2017.shape[0]}")
+```
+
+# ADD ABOUT IF IT MAKES SENSE !!!!!!!!!!!!!!!!!!!!!!!!
+
+```{python}
+# FOR 2018
+hospitals_2018 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2018.csv" , encoding="ISO-8859-1")
+hospitals_2018.head()
+
+# Subsetting the hospitals
+short_term_hospitals_2018 = hospitals_2018[(hospitals_2018["PRVDR_CTGRY_CD"] == 1) & (hospitals_2018["PRVDR_CTGRY_SBTYP_CD"] == 1)]
+
+# Adding a column for the year
+short_term_hospitals_2018["YEAR"] = 2018
+
+print(f"The short term hospitals in 2018 were {short_term_hospitals_2018.shape[0]}")
+```
+
+# ADD ABOUT IF IT MAKES SENSE !!!!!!!!!!!!!!!!!!!!!!!!
+
+```{python}
+# FOR 2019
+hospitals_2019 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2019.csv" , encoding="ISO-8859-1")
+hospitals_2019.head()
+
+# Subsetting the hospitals
+short_term_hospitals_2019 = hospitals_2019[(hospitals_2019["PRVDR_CTGRY_CD"] == 1) & (hospitals_2019["PRVDR_CTGRY_SBTYP_CD"] == 1)]
+
+# Adding a column for the year
+short_term_hospitals_2019["YEAR"] = 2019
+
+print(f"The short term hospitals in 2019 were {short_term_hospitals_2019.shape[0]}")
+```
+
+# ADD ABOUT IF IT MAKES SENSE !!!!!!!!!!!!!!!!!!!!!!!!
+
+Appending the datasets together
+```{python}
+combined_short_term_hospitals = pd.concat([short_term_hospitals_2016, short_term_hospitals_2017, short_term_hospitals_2018, short_term_hospitals_2019], ignore_index=True)
+combined_short_term_hospitals.head()
+```
+
+Plotting the number of hospitals by year
+```{python}
+# grouping by year
+hospitals_by_year = combined_short_term_hospitals.groupby("YEAR").size().reset_index(name = "number_of_hospitals")
+
+# plotting the number of observations by year
+alt.Chart(hospitals_by_year).mark_bar().encode(
+    alt.X("YEAR:N" , title = "Year"),
+    alt.Y("number_of_hospitals" , title = "Number of Hospitals")
+)
+```
+
+
+4. Plotting the unique number of hospitals by year
+```{python}
+unique_hospitals_by_year = (
+    combined_short_term_hospitals.groupby("YEAR")["PRVDR_NUM"].nunique().reset_index(name = "unique_hospitals")
+)
+
+# plotting the unique number of hospitals
+alt.Chart(unique_hospitals_by_year).mark_bar().encode(
+    alt.X("YEAR:N" , title = "Year"),
+    alt.Y("unique_hospitals" , title = "Number of Unique Hospitals")
+)
+```
+
+    a. # ADD ANSWER HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    b. # ADD ANSWER HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Identify hospital closures in POS file (15 pts) (*)
 
