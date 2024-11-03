@@ -52,7 +52,8 @@ import altair as alt
 ```
 
 ```{python}
-hospitals_2016 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2016.csv")
+#hospitals_2016 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2016.csv")
+hospitals_2016 = pd.read_csv("/Users/nidhi/Desktop/Data and Programming Python 2/POS_File_Hospital_Non_Hospital_Facilities_Q4_2016.csv")
 hospitals_2016.head()
 
 # Subsetting the hospitals
@@ -70,7 +71,8 @@ short_term_hospitals_2016.shape[0]
 3. Importing the datasets
 ```{python}
 # FOR 2017
-hospitals_2017 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2017.csv")
+#hospitals_2017 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2017.csv")
+hospitals_2017 = pd.read_csv("/Users/nidhi/Desktop/Data and Programming Python 2/POS_File_Hospital_Non_Hospital_Facilities_Q4_2017.csv")
 hospitals_2017.head()
 
 # Subsetting the hospitals
@@ -86,7 +88,8 @@ print(f"The short term hospitals in 2017 were {short_term_hospitals_2017.shape[0
 
 ```{python}
 # FOR 2018
-hospitals_2018 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2018.csv" , encoding="ISO-8859-1")
+#hospitals_2018 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2018.csv" , encoding="ISO-8859-1")
+hospitals_2018 = pd.read_csv("/Users/nidhi/Desktop/Data and Programming Python 2/POS_File_Hospital_Non_Hospital_Facilities_Q4_2018.csv" , encoding="ISO-8859-1")
 hospitals_2018.head()
 
 # Subsetting the hospitals
@@ -102,7 +105,8 @@ print(f"The short term hospitals in 2018 were {short_term_hospitals_2018.shape[0
 
 ```{python}
 # FOR 2019
-hospitals_2019 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2019.csv" , encoding="ISO-8859-1")
+#hospitals_2019 = pd.read_csv("/Users/kishikamahajan/Desktop/pos2019.csv" , encoding="ISO-8859-1")
+hospitals_2019 = pd.read_csv("/Users/nidhi/Desktop/Data and Programming Python 2/POS_File_Hospital_Non_Hospital_Facilities_Q4_2019.csv" , encoding="ISO-8859-1")
 hospitals_2019.head()
 
 # Subsetting the hospitals
@@ -154,8 +158,119 @@ alt.Chart(unique_hospitals_by_year).mark_bar().encode(
 ## Identify hospital closures in POS file (15 pts) (*)
 
 1. 
+
+
+```{python}
+#Identifying unique column
+unique_columns = [col for col in short_term_hospitals_2016.columns if short_term_hospitals_2016[col].is_unique]
+print("Columns with all unique values:", unique_columns)
+```
+
+
+```{python}
+
+termination_active_2016 = short_term_hospitals_2016[short_term_hospitals_2016['PGM_TRMNTN_CD']==0]
+termination_active_2016
+
+termination_active_2016_s = termination_active_2016[['PGM_TRMNTN_CD', 'FAC_NAME', 'ZIP_CD','YEAR','PRVDR_NUM']]
+
+
+def terminated_hospitals(years, short_term_hospital_mapping):
+    # Empty list to store results
+    terminated_hospitals_list = []
+    
+    for year in years:
+        short_term_hospital_year = short_term_hospital_mapping[year]
+        
+        # Creating a subset of data by selecting columns
+        short_term_hospital_year_s = short_term_hospital_year[['PGM_TRMNTN_CD', 'FAC_NAME', 'ZIP_CD','YEAR','PRVDR_NUM']]
+        
+        # Merging the dataset with 2016 Active hospitals
+        merged_data_year = pd.merge(termination_active_2016_s, short_term_hospital_year_s, on='PRVDR_NUM', how='outer', indicator=True)
+        
+        # Filtering terminated hospitals
+        terminated_hospitals_year = merged_data_year[(merged_data_year['_merge'] == 'left_only') | ((merged_data_year['PGM_TRMNTN_CD_y'] != 0) & (merged_data_year['_merge'] == 'both' ))]
+        
+        # Store the results in the list
+        terminated_hospitals_list.append({
+            'year': year,
+            'terminated_hospitals': terminated_hospitals_year
+        })
+        
+    return terminated_hospitals_list
+
+# Define the years and the mapping of short-term hospitals
+years = [2017, 2018, 2019]
+
+short_term_hospitals_mapping = {
+    2017: short_term_hospitals_2017,
+    2018: short_term_hospitals_2018,
+    2019: short_term_hospitals_2019,
+}
+
+# Call the function
+terminated_hospitals_result = terminated_hospitals(years, short_term_hospitals_mapping)
+
+# Print the results
+for entry in terminated_hospitals_result:
+    print(f"Terminated hospitals for {entry['year']}:\n", entry['terminated_hospitals'])
+
+
+```
+
+
+```{python}
+all_terminated_hospitals = pd.concat([entry['terminated_hospitals'] for entry in terminated_hospitals_result], ignore_index=True)
+all_terminated_hospitals
+```
+
+```{python}
+#Group by FAC to check independent hospital closures
+test = all_terminated_hospitals.groupby('PRVDR_NUM').count()
+print("Total number of terminated hospitals is",len(test))
+```
+
+
+
 2. 
+
+```{python}
+all_terminated_hospitals_1 = all_terminated_hospitals.sort_values(by='FAC_NAME_x', ascending=True)
+all_terminated_hospitals_2 = all_terminated_hospitals_1[['FAC_NAME_x','YEAR_y']]
+first_10_rows = all_terminated_hospitals_2.head(10)
+print("First 10 hospital name with year of suspected closure is:",first_10_rows)
+
+
+```
+
+
+
 3. 
+
+
+```{python}
+all_terminated_hospitals_3 = all_terminated_hospitals_1.sort_values(by='YEAR_y', ascending=True)
+all_terminated_hospitals_4 = all_terminated_hospitals_1[['FAC_NAME_x','YEAR_y','ZIP_CD_x']]
+all_terminated_hospitals_4
+
+#Group by data using ZIP_CD_x
+all_terminated_hospitals_5 = all_terminated_hospitals_4.groupby(['ZIP_CD_x','YEAR_y']).count()
+all_terminated_hospitals_5
+
+all_terminated_hospitals_5['FAC_NAME_x_diff'] = all_terminated_hospitals_5.groupby('ZIP_CD_x')['FAC_NAME_x'].diff()
+all_terminated_hospitals_5
+
+```
+
+```{python}
+
+#Find ZIP codes where the number of Diff value is greater than 0
+non_decreasing_zip = all_terminated_hospitals_5[all_terminated_hospitals_5['FAC_NAME_x_diff'] > 0 &all_terminated_hospitals_5['FAC_NAME_x_diff'].notna()]
+non_decreasing_zip
+
+```
+
+
     a.
     b.
     c.
@@ -188,3 +303,10 @@ alt.Chart(unique_hospitals_by_year).mark_bar().encode(
 4. 
 
 ## Reflecting on the exercise (10 pts) 
+
+
+3. 
+
+
+
+
